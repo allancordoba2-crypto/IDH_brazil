@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BundleName</key>
+	<string>Income File Audit Prevention Bundle</string>
+	<key>BundleVersion</key>
+	<string>2026.03.11</string>
+	<key>Repository</key>
+	<string>IDH_brazil</string>
+	<key>MainRunner</key>
+	<string>audit_income_files_with_policy_tools.go</string>
+	<key>PolicyDocument</key>
+	<string>income_file_audit_prevention_policy.md</string>
+	<key>IdeaForm</key>
+	<string>populational_issue_prevention_idea_form.md</string>
+	<key>Outputs</key>
+	<array>
+		<string>reports/latest_income_policy_audit_report.md</string>
+		<string>reports/populational_issue_idea_queue.md</string>
+		<string>reports/income_policy_audit_file_list.txt</string>
+	</array>
+</dict>
+</plist>
