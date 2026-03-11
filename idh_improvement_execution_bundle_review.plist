@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BundleName</key>
+	<string>IDH Improvement Execution Bundle</string>
+	<key>BundleVersion</key>
+	<string>2026.03.11</string>
+	<key>InputReport</key>
+	<string>reports/latest_income_policy_audit_report.md</string>
+	<key>MainRunner</key>
+	<string>build_idh_improvement_backlog_from_audit.go</string>
+	<key>Outputs</key>
+	<array>
+		<string>reports/idh_improvement_backlog.md</string>
+		<string>reports/idh_90_day_execution_plan.md</string>
+	</array>
+	<key>Rule</key>
+	<string>Read full evidence before interpersonal escalation.</string>
+</dict>
+</plist>
