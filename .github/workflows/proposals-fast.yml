@@ -1,0 +1,105 @@
+name: Proposals Fast Lane
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_reason:
+        description: "Why are you running this now?"
+        required: false
+        default: "manual fast run"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*proposal*.md"
+      - "**/*proposta*.md"
+      - "**/*idea*.md"
+      - "**/*prevention*.md"
+      - "audit_income_files_with_policy_tools.go"
+      - "build_idh_improvement_backlog_from_audit.go"
+      - "income_file_audit_prevention_policy.md"
+      - "populational_issue_prevention_idea_form.md"
+  pull_request:
+    paths:
+      - "**/*proposal*.md"
+      - "**/*proposta*.md"
+      - "**/*idea*.md"
+      - "**/*prevention*.md"
+      - "audit_income_files_with_policy_tools.go"
+      - "build_idh_improvement_backlog_from_audit.go"
+      - "income_file_audit_prevention_policy.md"
+      - "populational_issue_prevention_idea_form.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proposals-fast-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-proposals-fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install required tools (if missing)
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          command -v zsh >/dev/null || missing+=("zsh")
+          command -v rg >/dev/null || missing+=("ripgrep")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            sudo apt-get update
+            sudo apt-get install -y "${missing[@]}"
+          fi
+
+      - name: Run fast proposal pipeline
+        shell: zsh {0}
+        run: |
+          set -euo pipefail
+          chmod +x audit_income_files_with_policy_tools.go
+          chmod +x build_idh_improvement_backlog_from_audit.go
+          ./audit_income_files_with_policy_tools.go
+          ./build_idh_improvement_backlog_from_audit.go
+
+      - name: Add summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          report="reports/latest_income_policy_audit_report.md"
+          echo "## Proposals Fast Lane" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Trigger: \`${{ github.event_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch/ref: \`${{ github.ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$report" ]; then
+            total=$(rg -o "Total files audited: [0-9]+" "$report" | awk '{print $4}' | tail -n 1 || true)
+            approve=$(rg -o "APPROVE_TRACK: [0-9]+" "$report" | awk '{print $2}' | tail -n 1 || true)
+            transform=$(rg -o "TRANSFORM_TO_PREVENTION: [0-9]+" "$report" | awk '{print $2}' | tail -n 1 || true)
+            blocked=$(rg -o "BLOCK_REVIEW: [0-9]+" "$report" | awk '{print $2}' | tail -n 1 || true)
+            rewrite=$(rg -o "NEEDS_REWRITE: [0-9]+" "$report" | awk '{print $2}' | tail -n 1 || true)
+            echo "- Total files audited: ${total:-n/a}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- APPROVE_TRACK: ${approve:-n/a}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- TRANSFORM_TO_PREVENTION: ${transform:-n/a}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- BLOCK_REVIEW: ${blocked:-n/a}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- NEEDS_REWRITE: ${rewrite:-n/a}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Report not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload proposal artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: proposals-fast-${{ github.run_number }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            reports/latest_income_policy_audit_report.md
+            reports/populational_issue_idea_queue.md
+            reports/idh_improvement_backlog.md
+            reports/idh_90_day_execution_plan.md
+            reports/income_policy_audit_file_list.txt

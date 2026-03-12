@@ -1,0 +1,97 @@
+name: Proposals Mirror Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for this sync run"
+        required: false
+        default: "manual mirror sync"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*proposal*.md"
+      - "**/*proposta*.md"
+      - "**/*idea*.md"
+      - "**/*prevention*.md"
+      - "**/*policy*.md"
+      - "scripts/update_proposals_mirror.py"
+      - "!mirror/**"
+      - "!reports/proposals_summary.md"
+      - "!.github/workflows/proposals-mirror-sync.yml"
+  pull_request:
+    paths:
+      - "**/*proposal*.md"
+      - "**/*proposta*.md"
+      - "**/*idea*.md"
+      - "**/*prevention*.md"
+      - "**/*policy*.md"
+      - "scripts/update_proposals_mirror.py"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: proposals-mirror-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync-proposals-mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate summaries and mirror links
+        run: |
+          set -euo pipefail
+          python3 scripts/update_proposals_mirror.py
+
+      - name: Add workflow summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          report="reports/proposals_summary.md"
+          index_file="mirror/icloud_files/INDEX.md"
+          echo "## Proposals Mirror Sync" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Trigger: \`${{ github.event_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$report" ]; then
+            total=$(rg -o "Total proposals: [0-9]+" "$report" | awk '{print $3}' | tail -n 1 || true)
+            echo "- Total proposals summarized: ${total:-n/a}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f "$index_file" ]; then
+            groups=$(rg -n "^## " "$index_file" | wc -l | tr -d ' ')
+            echo "- Organized mirror folders: ${groups:-0}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload mirror artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: proposals-mirror-${{ github.run_number }}
+          retention-days: 7
+          path: |
+            reports/proposals_summary.md
+            mirror/icloud_files
+
+      - name: Auto-commit mirror updates
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- reports/proposals_summary.md mirror/icloud_files; then
+            echo "No mirror updates to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/proposals_summary.md mirror/icloud_files
+          git commit -m "chore: sync proposal summaries and iCloud mirror links [skip ci]"
+          git push
