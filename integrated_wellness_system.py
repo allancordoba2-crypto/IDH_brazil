@@ -5,10 +5,10 @@ from datetime import datetime
 # Dados mock atualizados: Funcionário SUS + Beauty Person + Model + Forças Militares
 data = {
     'perfil': [
-        'Funcionario_SUS_BR',
+        'Funcionario_SUS_BR_SP',
         'Beauty_Person_RJ',
         'Model_Beauty_RJ',
-        'Forcas_Militares_BR'
+        'Forcas_Militares_BR_SP'
     ],
     'nome': [
         'João Silva - SUS SP/RJ',
@@ -46,10 +46,48 @@ data = {
         'Análise de uso de sistemas governamentais e redes sociais (Facebook)',
         'Análise de uso de sistemas governamentais e redes sociais (Facebook)'
     ],
+    'tarefa_regulamentacao': [
+        'Estudar Lei Complementar nº 791/1995 (Código de Saúde SP)',
+        'Estudar Código de Saúde do Estado do Rio de Janeiro',
+        'Estudar Código de Saúde do Estado do Rio de Janeiro',
+        'Estudar Estatuto dos Militares (Lei nº 6.880/1980)'
+    ],
     'data': [datetime.now().strftime('%Y-%m-%d')] * 4
 }
 
 df = pd.DataFrame(data)
+
+# Função para simular a verificação de regulamentações e retornar preferências regionais
+def verificar_regulamentacoes_e_preferencias(df):
+    print("\nVerificando regulamentações e definindo preferências regionais...")
+    preferencias_regionais = {}
+    for idx, row in df.iterrows():
+        perfil = row['perfil']
+        tarefa_reg = row['tarefa_regulamentacao']
+        
+        print(f"Para {perfil}: Tarefa de regulamentação - {tarefa_reg}")
+        
+        # Simulação de retorno de preferências baseadas na localização
+        if 'SP' in perfil:
+            preferencias_regionais[perfil] = {
+                'estado': 'São Paulo',
+                'servicos_adicionais': ['CROSS/SER SP', 'DATASUS SP'],
+                'mensagem_conformidade': 'Conformidade com regulamentações de saúde de SP é crucial.'
+            }
+        elif 'RJ' in perfil:
+            preferencias_regionais[perfil] = {
+                'estado': 'Rio de Janeiro',
+                'servicos_adicionais': ['Saúde RJ - Vigilância Sanitária', 'DATASUS RJ'],
+                'mensagem_conformidade': 'Atenção às normas de saúde do RJ para evitar erros.'
+            }
+        else:
+            preferencias_regionais[perfil] = {
+                'estado': 'N/A',
+                'servicos_adicionais': [],
+                'mensagem_conformidade': 'Regulamentações gerais aplicáveis.'
+            }
+        print(f"  Preferências para {perfil}: {preferencias_regionais[perfil]}")
+    return preferencias_regionais
 
 # Função de integração com strong string (simula envio seguro USA-BR para saúde/esporte e sistemas governamentais)
 def integrar_sistemas_governamentais(df):
@@ -78,10 +116,13 @@ def integrar_sistemas_governamentais(df):
     df.to_csv('integrated_wellness_system_report.csv', index=False)
     print("\nRelatório gerado para programas de qualidade de saúde e integração governamental.")
 
+# Execução das funções
 integrar_sistemas_governamentais(df)
+preferencias = verificar_regulamentacoes_e_preferencias(df)
+print("\nDataFrame final:")
 print(df)
 
-print("\nComo usar: Execute o script para gerar o CSV. Expanda com APIs oficiais (DATASUS, CROSS, Fala.BR) para rastreamento real de atividades físicas, bem-estar corporativo e comunicação governamental.")
-print("Isso fortalece a integração entre sistemas de saúde, profissionais SUS, área de beleza/modelos e Forças Militares para melhor qualidade de vida através do esporte e acesso a serviços governamentais!")
+print("\nComo usar: Execute o script para gerar o CSV. Expanda com APIs oficiais (DATASUS, CROSS, Fala.BR) para rastreamento real de atividades físicas, bem-estar corporativo e comunicação governamental. A lógica de regulamentação e preferências regionais pode ser aprimorada com a integração de APIs de legislação.")
+print("Isso fortalece a integração entre sistemas de saúde, profissionais SUS, área de beleza/modelos e Forças Militares para melhor qualidade de vida através do esporte e acesso a serviços governamentais, sempre com foco na conformidade regulatória!")
 print("\n'Todos os sistemas me ajudam a atingir meus objetivos.'")
 print("CRM 227445")
